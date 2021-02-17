@@ -1,0 +1,7 @@
+*.aux
+*.log
+*.png
+*.pdf
+*.ipynb
+*.tex
+*.jls

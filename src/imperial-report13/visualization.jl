@@ -19,26 +19,28 @@ function country_prediction_plot(data::ImperialReport13.Data, country_idx, predi
 
     daily_deaths = data.turing_data.deaths[country_idx]
     daily_cases = data.turing_data.cases[country_idx]
-    
-    p1 = plot(; xaxis = false, legend = :topleft)
+
+    p1 = plot(; xaxis = false, legend = :outertopright)
     bar!(preproc(daily_deaths), label="Observed daily deaths")
     title!(replace(country_name, "_" => " ") * " " * main_title)
     vline!([data.turing_data.epidemic_start[country_idx]], label="epidemic start", linewidth=2)
     vline!([num_observed_days], label="end of observations", linewidth=2)
     xlims!(0, num_total_days)
 
-    p2 = plot(; legend = :topleft, xaxis=false)
+    p2 = plot(; legend = :outertopright, xaxis=false)
     plot_confidence_timeseries!(p2, preproc(e_deaths_country); label = "Expected daily deaths")
     bar!(preproc(daily_deaths), label="Recorded daily deaths (observed)", alpha=0.5)
 
-    p3 = plot(; legend = :bottomleft, xaxis=false)
+    p3 = plot(; legend = :outertopright, xaxis=false)
     plot_confidence_timeseries!(p3, Rt_country; no_label = true)
-    for (c_idx, c_time) in enumerate(findfirst.(==(1), eachcol(data.turing_data.covariates[country_idx])))
-        if c_time !== nothing
+    for (c_idx, col) in enumerate(eachcol(data.turing_data.covariates[1]))
+        c_times = findall(>(0), diff(col))
+        if !isempty(c_times)
             c_name = data.covariate_names[c_idx]
-            if (c_name != "any")
-                # Don't add the "any intervention" stuff
-                vline!([c_time - 1], label=c_name)
+            if (c_name != "any") # Don't add the "any intervention" stuff
+                for c_time in c_times
+                    vline!([c_time], label=c_name*" level $(col[c_time+1])")
+                end
             end
         end
     end
@@ -47,26 +49,26 @@ function country_prediction_plot(data::ImperialReport13.Data, country_idx, predi
     lq, hq = (eachrow(hcat(qs...))..., )
     ylims!(0, maximum(hq) + 0.1)
 
-    p4 = plot(; legend = :topleft, xaxis=false)
+    p4 = plot(; legend = :outertopright, xaxis=false)
     plot_confidence_timeseries!(p4, preproc(predictions_country); label = "Expected daily cases")
     bar!(preproc(daily_cases), label="Recorded daily cases (observed)", alpha=0.5)
 
     vals = preproc(cumsum(e_deaths_country; dims = 1))
-    p5 = plot(; legend = :topleft, xaxis=false)
+    p5 = plot(; legend = :outertopright, xaxis=false)
     plot_confidence_timeseries!(p5, vals; label = "Expected deaths")
-    plot!(preproc(cumsum(daily_deaths)), label="Recorded deaths (observed)", color=:red)
+    plot!(preproc(cumsum(daily_deaths)), label="Recorded cumulative deaths", color=:red)
 
-    vals = preproc(cumsum(predictions_country; dims = 1))
-    p6 = plot(; legend = :topleft)
-    plot_confidence_timeseries!(p6, vals; label = "Expected cases")
-    plot!(preproc(daily_cases), label="Recorded cases (observed)", color=:red)
+    vals = preproc(cumsum(predictions_country; dims = 1)./ data.turing_data.population[country_idx])
+    p6 = plot(; legend = :outertopright)
+    plot_confidence_timeseries!(p6, vals; label = "Expected cumulative cases")
+    plot!(preproc(cumsum(daily_cases)./ data.turing_data.population[country_idx]), label="Recorded cumulative cases", color=:red)
 
-    p = plot(p1, p3, p2, p4, p5, p6, layout=(6, 1), size=(900, 1200), sharex=true)
-    xticks!(1:3:num_total_days, date_strings[1:3:end], xrotation=45)
+    p = plot(p1, p3, p2, p4, p5, p6, layout=(6, 1), size=(2000, 2000), sharex=true)
+    xticks!(1:20:num_total_days, date_strings[1:20:end], xrotation=45)
 
     return p
 end
-                                        
+
 function country_prediction_plot(data::ImperialReport13.Data, country_idx, cases, e_deaths, Rt; kwargs...)
     num_observed_days = length(e_deaths)
     e_deaths_country = hcat([e_deaths[t][country_idx] for t = 1:num_observed_days]...)
