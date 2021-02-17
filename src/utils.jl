@@ -91,7 +91,7 @@ end
 "Converts a vector of tuples to a tuple of vectors."
 function vectup2tupvec(ts::AbstractVector{<:Tuple})
     k = length(first(ts))
-    
+
     return tuple([[t[i] for t in ts] for i = 1:k]...)
 end
 

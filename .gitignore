@@ -2,6 +2,7 @@
 *.log
 *.png
 *.pdf
+*.out
 *.ipynb
 *.tex
 *.jls
