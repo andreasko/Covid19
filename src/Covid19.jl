@@ -4,6 +4,7 @@ using DrWatson, Turing
 
 export ImperialReport13,
     ImperialReportUSA,
+    ImperialUSAcases,
     NegativeBinomial2,
     GammaMeanCv,
     generated_quantities,
@@ -19,4 +20,5 @@ include("visualization.jl")   # <= visualization stuff
 # Different related reports
 include("imperial-report13/ImperialReport13.jl")
 include("imperial-report-usa/ImperialReportUSA.jl")
+include("imperial-usa-cases/ImperialUSAcases.jl")
 end # module
